@@ -4,7 +4,7 @@ const defaults = {
   supabaseAnonKey: "",
   adminEmails: ["owner@example.com"],
   defaultWeeklyGoal: 20,
-  demoMode: true,
+  demoMode: false,
 };
 
 export const APP_CONFIG = Object.freeze({
@@ -16,7 +16,7 @@ export const SUPABASE_ENABLED = Boolean(
   APP_CONFIG.supabaseUrl && APP_CONFIG.supabaseAnonKey,
 );
 
-export const DEMO_MODE = APP_CONFIG.demoMode || !SUPABASE_ENABLED;
+export const DEMO_MODE = Boolean(APP_CONFIG.demoMode) || !SUPABASE_ENABLED;
 
 export const STORAGE_KEYS = Object.freeze({
   demoState: "learn-tracker.demo-state.v1",
