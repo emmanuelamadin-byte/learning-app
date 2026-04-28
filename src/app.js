@@ -173,13 +173,16 @@ function AuthScreen({
                       className="min-h-12 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-white placeholder:text-white/30"
                       placeholder="••••••••"
                     />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick=${() => {
                         const email = signInForm.email;
                         if (!email) return alert("Please enter your email first to reset your password.");
-                        dataClient.resetPassword(email).then(() => alert("Check your email for the reset link!")).catch(err => alert("Error: " + err.message));
-                      }} 
+                        dataClient
+                          .resetPassword(email)
+                          .then(() => alert("Check your email for the reset link!"))
+                          .catch((err) => alert("Error: " + err.message));
+                      }}
                       className="text-xs text-white/45 hover:text-white/75 text-left mt-1"
                     >
                       Forgot password?
@@ -195,9 +198,9 @@ function AuthScreen({
                     <div className="flex-grow border-t border-white/10"></div>
                   </div>
 
-                  <button 
-                    type="button" 
-                    onClick=${() => dataClient.signInWithGoogle()} 
+                  <button
+                    type="button"
+                    onClick=${() => dataClient.signInWithGoogle()}
                     className="mt-1 w-full min-h-12 rounded-2xl border border-white/10 bg-white/5 text-white font-semibold flex items-center justify-center gap-3 hover:bg-white/10 transition"
                   >
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google Logo" />
@@ -287,16 +290,16 @@ function AuthScreen({
                   <button type="submit" disabled=${authBusy} className=${buttonClass()}>
                     ${authBusy ? "Creating your account..." : "Create account"}
                   </button>
-                  
+
                   <div className="relative flex items-center py-2">
                     <div className="flex-grow border-t border-white/10"></div>
                     <span className="flex-shrink-0 mx-4 text-white/30 text-sm">or</span>
                     <div className="flex-grow border-t border-white/10"></div>
                   </div>
 
-                  <button 
-                    type="button" 
-                    onClick=${() => dataClient.signInWithGoogle()} 
+                  <button
+                    type="button"
+                    onClick=${() => dataClient.signInWithGoogle()}
                     className="mt-1 w-full min-h-12 rounded-2xl border border-white/10 bg-white/5 text-white font-semibold flex items-center justify-center gap-3 hover:bg-white/10 transition"
                   >
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google Logo" />
@@ -536,6 +539,7 @@ export function App() {
     sessions: [],
     reactions: [],
     announcements: [],
+    userStreaks: [],
     currentUserId: null,
     currentUser: null,
   });
@@ -567,10 +571,11 @@ export function App() {
   const profiles = snapshot.profiles;
   const sessions = snapshot.sessions;
   const reactions = snapshot.reactions;
+  const userStreaks = snapshot.userStreaks || [];
   const currentUser = snapshot.currentUser;
   const profileLookup = Object.fromEntries(profiles.map((profile) => [profile.id, profile]));
   const currentMetrics = currentUser
-    ? deriveUserMetrics(currentUser, sessions, profiles)
+    ? deriveUserMetrics(currentUser, sessions, profiles, userStreaks)
     : null;
   const ownerAnalytics = computeOwnerAnalytics(profiles, sessions);
   const latestAnnouncement = snapshot.announcements[0] || null;
@@ -775,6 +780,7 @@ export function App() {
         sessions: [],
         reactions: [],
         announcements: [],
+        userStreaks: [],
         currentUserId: null,
         currentUser: null,
       });
@@ -1008,6 +1014,7 @@ export function App() {
           profiles=${profiles}
           sessions=${sessions}
           reactions=${reactions}
+          userStreaks=${userStreaks}
           profileLookup=${profileLookup}
           ownerAnalytics=${ownerAnalytics}
           selectedProfile=${selectedProfile}

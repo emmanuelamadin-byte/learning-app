@@ -29,7 +29,7 @@ export function dayTotals(sessions) {
   return Object.fromEntries(
     Object.entries(grouped).map(([day, daySessions]) => [
       day,
-      roundHours(sum(daySessions.map((session) => session.hours))),
+      roundHours(sum(daySessions.map((session) => Number(session.hours) || 0))),
     ]),
   );
 }
@@ -84,6 +84,23 @@ export function calculateStreaks(sessions) {
   return { currentStreak, longestStreak, sevenDayTracker, streakAtRisk };
 }
 
+function resolveStreakMetrics(profileId, sessions, userStreaks = []) {
+  const fallback = calculateStreaks(sessions);
+  const matched = userStreaks.find((row) => row.userId === profileId);
+
+  if (!matched) {
+    return fallback;
+  }
+
+  return {
+    ...fallback,
+    currentStreak: Number(matched.currentStreak ?? fallback.currentStreak ?? 0),
+    longestStreak: Number(matched.longestStreak ?? fallback.longestStreak ?? 0),
+    lastActive: matched.lastActive || null,
+    streakUpdatedAt: matched.updatedAt || null,
+  };
+}
+
 export function buildWeeklyBars(sessions, reference = new Date()) {
   const weekStart = startOfWeek(reference);
   const totals = dayTotals(sessions);
@@ -107,7 +124,7 @@ export function sumWeeklyHours(sessions, reference = new Date()) {
     sum(
       sessions
         .filter((session) => withinRange(session.sessionDay || session.loggedAt, start, end))
-        .map((session) => session.hours),
+        .map((session) => Number(session.hours) || 0),
     ),
   );
 }
@@ -123,7 +140,7 @@ export function sumLastWeekHours(sessions, reference = new Date()) {
         .filter((session) =>
           withinRange(session.sessionDay || session.loggedAt, previousWeekStart, previousWeekEnd),
         )
-        .map((session) => session.hours),
+        .map((session) => Number(session.hours) || 0),
     ),
   );
 }
@@ -141,13 +158,16 @@ export function resolveLevel(totalHours) {
 export function deriveBadges(profile, profileSessions, allProfiles, allSessions, metrics) {
   const weeklyHours = sumWeeklyHours(profileSessions);
   const currentStreak = metrics?.currentStreak ?? calculateStreaks(profileSessions).currentStreak;
-  const totalHours = metrics?.totalHours ?? roundHours(sum(profileSessions.map((session) => session.hours)));
+  const totalHours =
+    metrics?.totalHours ?? roundHours(sum(profileSessions.map((session) => Number(session.hours) || 0)));
+
   const weeklyChampionId = allProfiles
     .map((candidate) => ({
       id: candidate.id,
       weeklyHours: sumWeeklyHours(allSessions.filter((session) => session.userId === candidate.id)),
     }))
     .sort((a, b) => b.weeklyHours - a.weeklyHours)[0]?.id;
+
   const isWeeklyChampion = weeklyChampionId === profile.id && weeklyHours > 0;
 
   return [
@@ -184,17 +204,19 @@ export function deriveBadges(profile, profileSessions, allProfiles, allSessions,
   ];
 }
 
-export function deriveUserMetrics(profile, allSessions, allProfiles) {
+export function deriveUserMetrics(profile, allSessions, allProfiles, userStreaks = []) {
   const sessions = allSessions.filter((session) => session.userId === profile.id);
-  const totalHours = roundHours(sum(sessions.map((session) => session.hours)));
+  const totalHours = roundHours(sum(sessions.map((session) => Number(session.hours) || 0)));
   const weeklyHours = sumWeeklyHours(sessions);
   const lastWeekHours = sumLastWeekHours(sessions);
   const activeDays = Object.keys(dayTotals(sessions)).length;
-  const streaks = calculateStreaks(sessions);
-  const weeklyGoal = profile.weeklyGoal || 20;
+  const streaks = resolveStreakMetrics(profile.id, sessions, userStreaks);
+  const weeklyGoal = Number(profile.weeklyGoal) || 20;
   const remainingHours = Math.max(weeklyGoal - weeklyHours, 0);
+  const progressPercent = weeklyGoal > 0 ? Math.min((weeklyHours / weeklyGoal) * 100, 100) : 0;
   const bestDayEntry = Object.entries(dayTotals(sessions)).sort((a, b) => b[1] - a[1])[0];
   const comparison = weeklyHours - lastWeekHours;
+
   const badges = deriveBadges(profile, sessions, allProfiles, allSessions, {
     currentStreak: streaks.currentStreak,
     totalHours,
@@ -225,6 +247,9 @@ export function deriveUserMetrics(profile, allSessions, allProfiles) {
     lastWeekHours,
     weeklyGoal,
     remainingHours,
+    progressPercent,
+    progressRatio: weeklyGoal > 0 ? weeklyHours / weeklyGoal : 0,
+    goalReached: weeklyHours >= weeklyGoal,
     activeDays,
     level: resolveLevel(totalHours),
     bestDay: bestDayEntry
@@ -237,10 +262,10 @@ export function deriveUserMetrics(profile, allSessions, allProfiles) {
   };
 }
 
-export function buildLeaderboard(profiles, sessions, mode = "weekly") {
+export function buildLeaderboard(profiles, sessions, mode = "weekly", userStreaks = []) {
   return profiles
     .map((profile) => {
-      const metrics = deriveUserMetrics(profile, sessions, profiles);
+      const metrics = deriveUserMetrics(profile, sessions, profiles, userStreaks);
       const value =
         mode === "streak"
           ? metrics.currentStreak
@@ -267,19 +292,24 @@ export function computeOwnerAnalytics(profiles, sessions) {
       .filter((session) => (session.sessionDay || isoDay(session.loggedAt)) === today)
       .map((session) => session.userId),
   ).size;
-  const weeklyRetention = profiles.length
-    ? Math.round(
-        (new Set(
-          sessions
-            .filter((session) => sumWeeklyHours([session]) > 0)
-            .map((session) => session.userId),
-        ).size /
-          profiles.length) *
-          100,
+
+  const currentWeekStart = startOfWeek(new Date());
+  const currentWeekEnd = endOfWeek(new Date());
+
+  const weeklyActiveUsers = new Set(
+    sessions
+      .filter((session) =>
+        withinRange(session.sessionDay || session.loggedAt, currentWeekStart, currentWeekEnd),
       )
+      .map((session) => session.userId),
+  ).size;
+
+  const weeklyRetention = profiles.length
+    ? Math.round((weeklyActiveUsers / profiles.length) * 100)
     : 0;
+
   const averageHours = profiles.length
-    ? roundHours(sum(sessions.map((session) => session.hours)) / profiles.length)
+    ? roundHours(sum(sessions.map((session) => Number(session.hours) || 0)) / profiles.length)
     : 0;
 
   return {

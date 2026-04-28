@@ -49,6 +49,7 @@ function loadCache() {
     sessions: [],
     reactions: [],
     announcements: [],
+    userStreaks: [],
   });
 }
 
@@ -61,6 +62,7 @@ function saveCache(snapshot) {
       sessions: snapshot.sessions,
       reactions: snapshot.reactions,
       announcements: snapshot.announcements,
+      userStreaks: snapshot.userStreaks || [],
     }),
   );
 }
@@ -124,6 +126,16 @@ function normalizeAnnouncement(record) {
     createdAt: record.created_at || record.createdAt,
     authorId: record.author_id || record.authorId,
     active: record.active ?? true,
+  };
+}
+
+function normalizeUserStreak(record) {
+  return {
+    userId: record.user_id || record.userId,
+    currentStreak: Number(record.current_streak ?? record.currentStreak ?? 0),
+    longestStreak: Number(record.longest_streak ?? record.longestStreak ?? 0),
+    lastActive: record.last_active || record.lastActive || null,
+    updatedAt: record.updated_at || record.updatedAt || null,
   };
 }
 
@@ -225,6 +237,7 @@ async function fetchSupabaseSnapshot() {
     sessionsResult,
     reactionsResult,
     announcementsResult,
+    userStreaksResult,
   ] = await Promise.all([
     supabase.auth.getUser(),
     supabase.from("profiles").select("*").order("created_at", { ascending: true }),
@@ -236,12 +249,14 @@ async function fetchSupabaseSnapshot() {
       .eq("active", true)
       .order("created_at", { ascending: false })
       .limit(5),
+    supabase.from("user_streaks").select("*"),
   ]);
 
   if (profilesResult.error) throw profilesResult.error;
   if (sessionsResult.error) throw sessionsResult.error;
   if (reactionsResult.error) throw reactionsResult.error;
   if (announcementsResult.error) throw announcementsResult.error;
+  if (userStreaksResult.error) throw userStreaksResult.error;
 
   return {
     currentUserId: authResult.data.user?.id || null,
@@ -249,6 +264,7 @@ async function fetchSupabaseSnapshot() {
     sessions: sessionsResult.data.map(normalizeSession),
     reactions: reactionsResult.data.map(normalizeReaction),
     announcements: announcementsResult.data.map(normalizeAnnouncement),
+    userStreaks: userStreaksResult.data.map(normalizeUserStreak),
   };
 }
 
@@ -297,6 +313,7 @@ export const dataClient = {
         sessions: byNewest(state.sessions.map(normalizeSession), "loggedAt"),
         reactions: state.reactions.map(normalizeReaction),
         announcements: byNewest(state.announcements.map(normalizeAnnouncement), "createdAt"),
+        userStreaks: [],
       };
       return {
         ...snapshot,
@@ -421,7 +438,7 @@ export const dataClient = {
       throw new Error("Password reset is not available in demo mode.");
     }
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + '#/reset-password',
+      redirectTo: window.location.origin + "#/reset-password",
     });
     if (error) throw error;
   },
@@ -431,7 +448,7 @@ export const dataClient = {
       throw new Error("Google Sign-In is not available in demo mode.");
     }
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider: "google",
       options: {
         redirectTo: window.location.origin,
       },
@@ -680,6 +697,11 @@ export const dataClient = {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "announcements" },
+        callback,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "user_streaks" },
         callback,
       )
       .subscribe();
