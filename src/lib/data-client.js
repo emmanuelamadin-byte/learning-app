@@ -199,6 +199,17 @@ async function uploadAvatar(file, userId) {
   return data.publicUrl;
 }
 
+async function refreshUserStreaks(userId) {
+  if (DEMO_MODE || !supabase || !userId) {
+    return;
+  }
+
+  const { error } = await supabase.rpc("refresh_user_streaks", { p_user_id: userId });
+  if (error) {
+    console.error("refresh_user_streaks failed:", error);
+  }
+}
+
 function enforceLocalRateLimit(userId) {
   const key = `learn-tracker.submit-rate.${userId}`;
   const previous = parse(localStorage.getItem(key), []);
@@ -256,15 +267,18 @@ async function fetchSupabaseSnapshot() {
   if (sessionsResult.error) throw sessionsResult.error;
   if (reactionsResult.error) throw reactionsResult.error;
   if (announcementsResult.error) throw announcementsResult.error;
-  if (userStreaksResult.error) throw userStreaksResult.error;
+
+  if (userStreaksResult.error) {
+    console.error("user_streaks fetch failed:", userStreaksResult.error);
+  }
 
   return {
     currentUserId: authResult.data.user?.id || null,
-    profiles: profilesResult.data.map(normalizeProfile),
-    sessions: sessionsResult.data.map(normalizeSession),
-    reactions: reactionsResult.data.map(normalizeReaction),
-    announcements: announcementsResult.data.map(normalizeAnnouncement),
-    userStreaks: userStreaksResult.data.map(normalizeUserStreak),
+    profiles: (profilesResult.data || []).map(normalizeProfile),
+    sessions: (sessionsResult.data || []).map(normalizeSession),
+    reactions: (reactionsResult.data || []).map(normalizeReaction),
+    announcements: (announcementsResult.data || []).map(normalizeAnnouncement),
+    userStreaks: (userStreaksResult.data || []).map(normalizeUserStreak),
   };
 }
 
@@ -282,9 +296,12 @@ async function flushQueuedSessions() {
     const { error } = await supabase.from("learning_sessions").upsert(toSessionRow(session), {
       onConflict: "client_id",
     });
+
     if (error) {
       throw error;
     }
+
+    await refreshUserStreaks(session.userId);
   }
 
   saveQueue([]);
@@ -315,6 +332,7 @@ export const dataClient = {
         announcements: byNewest(state.announcements.map(normalizeAnnouncement), "createdAt"),
         userStreaks: [],
       };
+
       return {
         ...snapshot,
         currentUser: snapshot.profiles.find((profile) => profile.id === snapshot.currentUserId) || null,
@@ -328,6 +346,7 @@ export const dataClient = {
 
       const snapshot = mergeQueuedSessions(await fetchSupabaseSnapshot());
       saveCache(snapshot);
+
       return {
         ...snapshot,
         currentUser:
@@ -351,9 +370,11 @@ export const dataClient = {
       const user = state.profiles.find(
         (profile) => profile.email.toLowerCase() === email.toLowerCase(),
       );
+
       if (!user || user.password !== password) {
         throw new Error("Use one of the demo accounts with password demo1234.");
       }
+
       setCurrentDemoUserId(user.id);
       return normalizeProfile(user);
     }
@@ -366,6 +387,7 @@ export const dataClient = {
   async signUp({ name, email, password, weeklyGoal, photoFile }) {
     if (DEMO_MODE) {
       const state = loadDemoState();
+
       if (state.profiles.some((profile) => profile.email.toLowerCase() === email.toLowerCase())) {
         throw new Error("That demo email already exists.");
       }
@@ -386,6 +408,7 @@ export const dataClient = {
         telegramHandle: "",
         isAdmin: APP_CONFIG.adminEmails.includes(email.toLowerCase()),
       });
+
       state.profiles.push(profile);
       state.currentUserId = id;
       saveDemoState(state);
@@ -400,6 +423,7 @@ export const dataClient = {
         data: { name },
       },
     });
+
     if (error) throw error;
 
     const userId = data.user?.id;
@@ -420,6 +444,7 @@ export const dataClient = {
 
     const { error: profileError } = await supabase.from("profiles").upsert(toProfileRow(profile));
     if (profileError) throw profileError;
+
     return profile;
   },
 
@@ -437,9 +462,11 @@ export const dataClient = {
     if (DEMO_MODE) {
       throw new Error("Password reset is not available in demo mode.");
     }
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: window.location.origin + "#/reset-password",
     });
+
     if (error) throw error;
   },
 
@@ -447,12 +474,14 @@ export const dataClient = {
     if (DEMO_MODE) {
       throw new Error("Google Sign-In is not available in demo mode.");
     }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: window.location.origin,
       },
     });
+
     if (error) throw error;
   },
 
@@ -469,6 +498,7 @@ export const dataClient = {
     const { error } = await supabase
       .from("profiles")
       .upsert(toProfileRow({ id: profileId, ...updates }), { onConflict: "id" });
+
     if (error) throw error;
   },
 
@@ -481,6 +511,7 @@ export const dataClient = {
 
   async createSession(userId, payload) {
     enforceLocalRateLimit(userId);
+
     const session = normalizeSession({
       id: `local-${uid()}`,
       clientId: uid(),
@@ -514,9 +545,12 @@ export const dataClient = {
       .single();
 
     if (error) {
+      console.error("createSession failed, queueing locally:", error);
       saveQueue([...loadQueue(), session]);
       return { queued: true, session };
     }
+
+    await refreshUserStreaks(userId);
 
     return { queued: false, session: normalizeSession(data) };
   },
@@ -552,6 +586,8 @@ export const dataClient = {
       .eq("id", session.id);
 
     if (error) throw error;
+
+    await refreshUserStreaks(session.userId);
   },
 
   async deleteSession(session) {
@@ -570,6 +606,8 @@ export const dataClient = {
 
     const { error } = await supabase.from("learning_sessions").delete().eq("id", session.id);
     if (error) throw error;
+
+    await refreshUserStreaks(session.userId);
   },
 
   async toggleReaction(userId, sessionId, emoji) {
@@ -581,9 +619,11 @@ export const dataClient = {
           reaction.sessionId === sessionId &&
           reaction.emoji === emoji,
       );
+
       state.reactions = existing
         ? state.reactions.filter((reaction) => reaction.id !== existing.id)
         : [...state.reactions, { id: uid(), userId, sessionId, emoji }];
+
       saveDemoState(state);
       return;
     }
@@ -607,6 +647,7 @@ export const dataClient = {
       session_id: sessionId,
       emoji,
     });
+
     if (error) throw error;
   },
 
@@ -619,8 +660,18 @@ export const dataClient = {
       return;
     }
 
+    const { data: sessionRow, error: lookupError } = await supabase
+      .from("learning_sessions")
+      .select("user_id")
+      .eq("id", sessionId)
+      .maybeSingle();
+
+    if (lookupError) throw lookupError;
+
     const { error } = await supabase.from("learning_sessions").delete().eq("id", sessionId);
     if (error) throw error;
+
+    await refreshUserStreaks(sessionRow?.user_id);
   },
 
   async removeUserAsAdmin(userId) {
@@ -636,6 +687,7 @@ export const dataClient = {
     const { error } = await supabase.functions.invoke("admin-remove-user", {
       body: { userId },
     });
+
     if (error) throw error;
   },
 
@@ -658,6 +710,7 @@ export const dataClient = {
       author_id: authorId,
       active: true,
     });
+
     if (error) throw error;
   },
 
@@ -669,6 +722,7 @@ export const dataClient = {
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       callback(session);
     });
+
     return () => data.subscription.unsubscribe();
   },
 
