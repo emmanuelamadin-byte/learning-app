@@ -27,19 +27,31 @@
         border-radius: 24px;
         background: rgba(13, 19, 40, 0.8);
         box-shadow: 0 24px 80px rgba(10, 14, 30, 0.35);
+        text-align: center;
       }
       h1 {
         font-family: "Space Grotesk", system-ui, sans-serif;
         margin: 0 0 0.75rem;
         font-size: 2rem;
+        color: #8ce99a;
       }
       p {
-        margin: 0 0 1rem;
+        margin: 0 0 1.5rem;
         line-height: 1.6;
         color: rgba(248, 250, 252, 0.84);
       }
-      a {
-        color: #8ce99a;
+      .btn {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        background: #8ce99a;
+        color: #060816;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: transform 0.2s ease;
+      }
+      .btn:active {
+        transform: scale(0.95);
       }
     </style>
   </head>
@@ -47,12 +59,11 @@
     <main>
       <h1>You are offline.</h1>
       <p>
-        Your cached dashboard will come back once core assets are available again. If you log
-        sessions while offline, Learn Tracker will sync them as soon as the connection returns.
+        Your dashboard is currently running in offline mode. If you log
+        sessions now, Learn Tracker will attempt to sync them as soon as 
+        your connection returns.
       </p>
-      <p>
-        Try reopening <a href="../index.html">Learn Tracker</a> when you are back online.
-      </p>
+      <a href="/" class="btn">Try Reconnecting</a>
     </main>
   </body>
 </html>
