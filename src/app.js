@@ -465,7 +465,6 @@ function AppShell({
   ];
 
   return html`
-    {/* FIXED: pb-36 guarantees enough space at the bottom so the nav bar never covers content */}
     <div className="min-h-screen px-4 pb-36 pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-6 lg:px-10">
       <header className="mx-auto flex max-w-7xl flex-col gap-4 lg:flex-row lg:items-center">
         <div className="flex items-center gap-3">
@@ -504,7 +503,6 @@ function AppShell({
         ${children}
       </main>
 
-      {/* FIXED: z-50 pushes it above all other content, and padding-bottom respects the mobile Safe Area */}
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/8 bg-ink/90 px-2 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md md:bottom-4 md:left-1/2 md:w-[min(720px,calc(100vw-32px))] md:-translate-x-1/2 md:rounded-[2rem] md:border md:pb-3">
         <div className="mx-auto flex w-full max-w-3xl gap-1 sm:gap-2">
           ${navItems.map((item) => {
@@ -513,7 +511,6 @@ function AppShell({
               route.view === item.id ||
               (item.id === "profile" && route.view === "profile" && route.id === currentUser.id);
             return html`
-              {/* FIXED: flex-1 for even spacing, truncate prevents text overflow */}
               <button
                 key=${item.id}
                 type="button"
