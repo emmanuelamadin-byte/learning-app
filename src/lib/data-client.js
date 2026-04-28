@@ -339,29 +339,18 @@ export const dataClient = {
       };
     }
 
-    try {
-      if (navigator.onLine) {
-        await flushQueuedSessions();
-      }
-
-      const snapshot = mergeQueuedSessions(await fetchSupabaseSnapshot());
-      saveCache(snapshot);
-
-      return {
-        ...snapshot,
-        currentUser:
-          snapshot.profiles.find((profile) => profile.id === snapshot.currentUserId) || null,
-      };
-    } catch (error) {
-      const cached = mergeQueuedSessions(loadCache());
-      return {
-        ...cached,
-        currentUser:
-          cached.profiles.find((profile) => profile.id === cached.currentUserId) || null,
-        offlineFallback: true,
-        error,
-      };
+    if (navigator.onLine) {
+      await flushQueuedSessions();
     }
+
+    const snapshot = mergeQueuedSessions(await fetchSupabaseSnapshot());
+    saveCache(snapshot);
+
+    return {
+      ...snapshot,
+      currentUser:
+        snapshot.profiles.find((profile) => profile.id === snapshot.currentUserId) || null,
+    };
   },
 
   async signIn({ email, password }) {
@@ -545,9 +534,8 @@ export const dataClient = {
       .single();
 
     if (error) {
-      console.error("createSession failed, queueing locally:", error);
-      saveQueue([...loadQueue(), session]);
-      return { queued: true, session };
+      console.error("createSession failed:", error);
+      throw error;
     }
 
     await refreshUserStreaks(userId);
@@ -566,13 +554,7 @@ export const dataClient = {
     }
 
     if (session.syncStatus === "queued" || session.id.startsWith("local-")) {
-      const queue = loadQueue().map((item) =>
-        item.clientId === session.clientId
-          ? { ...item, ...updates, updatedAt: new Date().toISOString() }
-          : item,
-      );
-      saveQueue(queue);
-      return;
+      throw new Error("This session has not synced yet, so it cannot be edited.");
     }
 
     const { error } = await supabase
@@ -600,8 +582,7 @@ export const dataClient = {
     }
 
     if (session.syncStatus === "queued" || session.id.startsWith("local-")) {
-      saveQueue(loadQueue().filter((item) => item.clientId !== session.clientId));
-      return;
+      throw new Error("This session has not synced yet, so it cannot be deleted.");
     }
 
     const { error } = await supabase.from("learning_sessions").delete().eq("id", session.id);
