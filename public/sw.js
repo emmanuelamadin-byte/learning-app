@@ -1,5 +1,5 @@
 const CACHE_NAME = "learn-tracker-v1";
-const OFFLINE_URL = "/public/offline.html";
+const OFFLINE_URL = "/offline.html"; // FIXED: Removed /public
 
 const CORE_ASSETS = [
   "/",
@@ -20,10 +20,10 @@ const CORE_ASSETS = [
   "/src/views/profile-view.js",
   "/src/views/admin-view.js",
   "/src/styles/app.css",
-  "/public/manifest.webmanifest",
-  "/public/offline.html",
-  "/public/icons/icon-192.png",
-  "/public/icons/icon-512.png",
+  "/manifest.webmanifest", // FIXED: Removed /public
+  "/offline.html",           // FIXED: Removed /public
+  "/icons/icon-192.png",     // FIXED: Removed /public
+  "/icons/icon-512.png",     // FIXED: Removed /public
   "https://esm.sh/react@18.3.1",
   "https://esm.sh/react-dom@18.3.1/client",
   "https://esm.sh/htm@3.1.1",
@@ -31,6 +31,7 @@ const CORE_ASSETS = [
   "https://cdn.tailwindcss.com?plugins=forms,typography"
 ];
 
+// ... (The rest of your event listeners below remain the same)
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
@@ -55,10 +56,7 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const { request } = event;
-
-  if (request.method !== "GET") {
-    return;
-  }
+  if (request.method !== "GET") return;
 
   if (request.mode === "navigate") {
     event.respondWith(
@@ -78,10 +76,7 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.match(request).then((cached) => {
-      if (cached) {
-        return cached;
-      }
-
+      if (cached) return cached;
       return fetch(request)
         .then((response) => {
           const copy = response.clone();
