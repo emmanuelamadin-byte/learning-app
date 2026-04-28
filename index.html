@@ -50,18 +50,16 @@
                 noise:
                   "radial-gradient(circle at top, rgba(106, 216, 255, 0.14), transparent 38%), radial-gradient(circle at bottom right, rgba(140, 233, 154, 0.12), transparent 32%)",
               },
+              animation: {
+                pulseSlow: "pulse 3s ease-in-out infinite",
+                floatSlow: "float 9s ease-in-out infinite",
+              },
             },
           },
         },
       };
     </script>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-    <script>
-      tailwind.config.theme.extend.animation = {
-        pulseSlow: "pulse 3s ease-in-out infinite",
-        floatSlow: "float 9s ease-in-out infinite",
-      };
-    </script>
     <link rel="stylesheet" href="./src/styles/app.css" />
     <script type="importmap">
       {
