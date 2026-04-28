@@ -7,13 +7,13 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <title>Learn Tracker</title>
+
     <meta
       name="description"
       content="A premium accountability workspace for serious learners and study groups."
     />
     <meta name="theme-color" content="#060816" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icons/icon-192.png" />
@@ -83,17 +83,66 @@
   <body class="min-h-screen bg-ink text-white antialiased pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]">
     <div id="app"></div>
 
+    <button
+      id="installBtn"
+      type="button"
+      style="display: none"
+      class="fixed bottom-5 right-5 z-50 items-center gap-2 rounded-full border border-white/10 bg-white/10 px-5 py-3 text-sm font-semibold text-white shadow-glow backdrop-blur transition hover:bg-white/15"
+      aria-label="Install app"
+    >
+      Install App
+    </button>
+
     <script src="./app-config.js"></script>
     <script type="module" src="./src/main.js"></script>
 
     <script>
+      let deferredPrompt = null;
+
+      const installBtn = document.getElementById("installBtn");
+
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        deferredPrompt = event;
+        console.log("Install prompt saved");
+
+        if (installBtn) {
+          installBtn.style.display = "inline-flex";
+        }
+      });
+
+      if (installBtn) {
+        installBtn.addEventListener("click", async () => {
+          if (!deferredPrompt) {
+            console.log("Install prompt not available");
+            return;
+          }
+
+          deferredPrompt.prompt();
+          const choiceResult = await deferredPrompt.userChoice;
+          console.log("Install choice:", choiceResult.outcome);
+
+          deferredPrompt = null;
+          installBtn.style.display = "none";
+        });
+      }
+
+      window.addEventListener("appinstalled", () => {
+        console.log("App installed");
+        deferredPrompt = null;
+
+        if (installBtn) {
+          installBtn.style.display = "none";
+        }
+      });
+
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", async () => {
           try {
-            const reg = await navigator.serviceWorker.register("/sw.js");
-            console.log("PWA active", reg);
-          } catch (err) {
-            console.error("PWA error", err);
+            const registration = await navigator.serviceWorker.register("/sw.js");
+            console.log("PWA active", registration);
+          } catch (error) {
+            console.error("PWA error", error);
           }
         });
       }
