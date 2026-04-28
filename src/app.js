@@ -465,7 +465,8 @@ function AppShell({
   ];
 
   return html`
-    <div className="min-h-screen px-4 pb-28 pt-6 sm:px-6 lg:px-10">
+    {/* FIXED: pb-36 guarantees enough space at the bottom so the nav bar never covers content */}
+    <div className="min-h-screen px-4 pb-36 pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-6 lg:px-10">
       <header className="mx-auto flex max-w-7xl flex-col gap-4 lg:flex-row lg:items-center">
         <div className="flex items-center gap-3">
           <div className="grid h-14 w-14 place-items-center rounded-[1.4rem] border border-white/10 bg-gradient-to-br from-accent/18 to-accent2/18 font-display text-2xl font-bold text-white">
@@ -503,27 +504,26 @@ function AppShell({
         ${children}
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/8 bg-ink/88 px-4 py-3 backdrop-blur md:bottom-4 md:left-1/2 md:w-[min(720px,calc(100vw-32px))] md:-translate-x-1/2 md:rounded-[2rem] md:border">
-        <div
-          className="mx-auto grid max-w-3xl gap-2"
-          style=${{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
-        >
+      {/* FIXED: z-50 pushes it above all other content, and padding-bottom respects the mobile Safe Area */}
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/8 bg-ink/90 px-2 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur-md md:bottom-4 md:left-1/2 md:w-[min(720px,calc(100vw-32px))] md:-translate-x-1/2 md:rounded-[2rem] md:border md:pb-3">
+        <div className="mx-auto flex w-full max-w-3xl gap-1 sm:gap-2">
           ${navItems.map((item) => {
             const targetRoute = item.route || { view: item.id };
             const active =
               route.view === item.id ||
               (item.id === "profile" && route.view === "profile" && route.id === currentUser.id);
             return html`
+              {/* FIXED: flex-1 for even spacing, truncate prevents text overflow */}
               <button
                 key=${item.id}
                 type="button"
                 onClick=${() => onNavigate(targetRoute)}
                 className=${cn(
-                  "min-h-12 rounded-2xl border border-white/8 px-3 text-sm font-semibold text-white/65 transition",
+                  "flex-1 flex items-center justify-center min-h-12 rounded-[1rem] sm:rounded-2xl border border-white/8 px-1 sm:px-3 text-[11px] sm:text-sm font-semibold text-white/65 transition truncate",
                   active && "nav-pill-active text-white",
                 )}
               >
-                ${item.label}
+                <span className="truncate">${item.label}</span>
               </button>
             `;
           })}
