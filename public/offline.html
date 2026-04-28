@@ -10,6 +10,9 @@
       }
       body {
         margin: 0;
+        /* FIXED: Added Safe Area Padding here too */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
         min-height: 100vh;
         display: grid;
         place-items: center;
@@ -21,49 +24,50 @@
         font-family: "Plus Jakarta Sans", system-ui, sans-serif;
       }
       main {
-        width: min(480px, calc(100vw - 32px));
-        padding: 2rem;
+        width: min(400px, calc(100vw - 48px));
+        padding: 2.5rem 2rem;
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 24px;
         background: rgba(13, 19, 40, 0.8);
+        backdrop-filter: blur(12px);
         box-shadow: 0 24px 80px rgba(10, 14, 30, 0.35);
         text-align: center;
       }
       h1 {
         font-family: "Space Grotesk", system-ui, sans-serif;
         margin: 0 0 0.75rem;
-        font-size: 2rem;
+        font-size: 1.75rem;
         color: #8ce99a;
       }
       p {
-        margin: 0 0 1.5rem;
+        margin: 0 0 2rem;
         line-height: 1.6;
-        color: rgba(248, 250, 252, 0.84);
+        color: rgba(248, 250, 252, 0.8);
+        font-size: 0.95rem;
       }
       .btn {
         display: inline-block;
-        padding: 0.75rem 1.5rem;
+        padding: 0.8rem 2rem;
         background: #8ce99a;
         color: #060816;
         text-decoration: none;
         border-radius: 12px;
         font-weight: 700;
-        transition: transform 0.2s ease;
+        transition: all 0.2s ease;
       }
       .btn:active {
-        transform: scale(0.95);
+        transform: scale(0.96);
       }
     </style>
   </head>
   <body>
     <main>
-      <h1>You are offline.</h1>
+      <h1>You're Offline</h1>
       <p>
-        Your dashboard is currently running in offline mode. If you log
-        sessions now, Learn Tracker will attempt to sync them as soon as 
-        your connection returns.
+        Don't worry. Learn Tracker is designed to work without a connection. 
+        Any data you input now will sync once you're back online.
       </p>
-      <a href="/" class="btn">Try Reconnecting</a>
+      <a href="/" class="btn">Return Home</a>
     </main>
   </body>
 </html>
