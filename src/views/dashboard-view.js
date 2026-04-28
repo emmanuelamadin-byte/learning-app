@@ -35,14 +35,6 @@ export default function DashboardView({
 
   return html`
     <div className="grid gap-6">
-      <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-white">
-        <div>User ID: ${currentUser.id}</div>
-        <div>Total sessions loaded: ${sessions.length}</div>
-        <div>My sessions loaded: ${mySessions.length}</div>
-        <div>Weekly hours: ${currentMetrics.weeklyHours}</div>
-        <div>Total hours: ${currentMetrics.totalHours}</div>
-      </div>
-
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div className="glass-panel relative overflow-hidden rounded-[2rem] p-6 sm:p-8">
           <div className="hero-orb hero-orb--green -left-6 top-6"></div>
