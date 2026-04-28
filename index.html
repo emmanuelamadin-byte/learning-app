@@ -12,9 +12,9 @@
       content="A premium accountability workspace for serious learners and study groups."
     />
     <meta name="theme-color" content="#060816" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    
+
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -48,18 +48,26 @@
               glow: "0 24px 80px rgba(94, 234, 212, 0.12)",
             },
             backgroundImage: {
-              noise: "radial-gradient(circle at top, rgba(106, 216, 255, 0.14), transparent 38%), radial-gradient(circle at bottom right, rgba(140, 233, 154, 0.12), transparent 32%)",
+              noise:
+                "radial-gradient(circle at top, rgba(106, 216, 255, 0.14), transparent 38%), radial-gradient(circle at bottom right, rgba(140, 233, 154, 0.12), transparent 32%)",
+            },
+            keyframes: {
+              floatSlow: {
+                "0%, 100%": { transform: "translateY(0px)" },
+                "50%": { transform: "translateY(-10px)" },
+              },
             },
             animation: {
               pulseSlow: "pulse 3s ease-in-out infinite",
-              floatSlow: "float 9s ease-in-out infinite",
+              floatSlow: "floatSlow 9s ease-in-out infinite",
             },
           },
         },
       };
     </script>
-    
+
     <link rel="stylesheet" href="./src/styles/app.css" />
+
     <script type="importmap">
       {
         "imports": {
@@ -71,22 +79,22 @@
       }
     </script>
   </head>
+
   <body class="min-h-screen bg-ink text-white antialiased pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]">
     <div id="app"></div>
-    <noscript>
-      <div style="padding: 2rem; color: white; font-family: sans-serif;">
-        Learn Tracker needs JavaScript enabled to run.
-      </div>
-    </noscript>
+
     <script src="./app-config.js"></script>
     <script type="module" src="./src/main.js"></script>
 
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('PWA active'))
-            .catch(err => console.log('PWA error', err));
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", async () => {
+          try {
+            const reg = await navigator.serviceWorker.register("/sw.js");
+            console.log("PWA active", reg);
+          } catch (err) {
+            console.error("PWA error", err);
+          }
         });
       }
     </script>
