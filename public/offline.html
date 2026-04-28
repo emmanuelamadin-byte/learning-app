@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Offline | Learn Tracker</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top, rgba(106, 216, 255, 0.16), transparent 30%),
+          radial-gradient(circle at bottom right, rgba(140, 233, 154, 0.15), transparent 32%),
+          #060816;
+        color: #f8fafc;
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+      }
+      main {
+        width: min(480px, calc(100vw - 32px));
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        background: rgba(13, 19, 40, 0.8);
+        box-shadow: 0 24px 80px rgba(10, 14, 30, 0.35);
+      }
+      h1 {
+        font-family: "Space Grotesk", system-ui, sans-serif;
+        margin: 0 0 0.75rem;
+        font-size: 2rem;
+      }
+      p {
+        margin: 0 0 1rem;
+        line-height: 1.6;
+        color: rgba(248, 250, 252, 0.84);
+      }
+      a {
+        color: #8ce99a;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>You are offline.</h1>
+      <p>
+        Your cached dashboard will come back once core assets are available again. If you log
+        sessions while offline, Learn Tracker will sync them as soon as the connection returns.
+      </p>
+      <p>
+        Try reopening <a href="../index.html">Learn Tracker</a> when you are back online.
+      </p>
+    </main>
+  </body>
+</html>

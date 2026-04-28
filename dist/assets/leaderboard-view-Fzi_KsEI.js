@@ -1,0 +1,90 @@
+import{M as e,P as t,a as n,b as r,j as i,s as a}from"./components-Be7lVndE.js";import{t as o}from"./index-xlBTyCBk.js";var s=t(e());function c({profiles:e,sessions:t,onProfileOpen:c}){let[l,u]=s.useState(`weekly`),[d,f]=s.useState(`hours`),[p,m]=s.useState(``),h=s.useDeferredValue(p.trim().toLowerCase()),g=o(e,t,d===`hours`?l===`weekly`?`weekly`:`total`:d).filter(e=>e.name.toLowerCase().includes(h)).map((e,t)=>({...e,rank:t+1,displayValue:d===`streak`?`${e.value} days`:r(d===`total`||l===`all-time`?e.metrics.totalHours:e.metrics.weeklyHours),detail:d===`streak`?`Total logged: ${r(e.metrics.totalHours)}`:`Current streak: ${e.metrics.currentStreak} days`})),_=g.slice(0,3);return i`
+    <div className="grid gap-6">
+      <section className="glass-panel rounded-[2rem] p-6 sm:p-8">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="text-xs uppercase tracking-[0.28em] text-white/45">Leaderboard</div>
+            <h1 className="mt-3 font-display text-4xl font-bold text-white">Consistency becomes visible here.</h1>
+            <p className="mt-3 max-w-2xl text-base leading-7 text-white/60">
+              Weekly standings refresh on Sunday. Switch between weekly hours, current streaks,
+              and all-time momentum to see who is sustaining the pace.
+            </p>
+          </div>
+          <label className="grid gap-2 lg:w-72">
+            <span className="text-sm text-white/55">Search members</span>
+            <input
+              type="search"
+              value=${p}
+              onInput=${e=>m(e.target.value)}
+              placeholder="Search the leaderboard"
+              className="min-h-12 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-white placeholder:text-white/30"
+            />
+          </label>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-4 lg:flex-row">
+          <div className="flex flex-wrap gap-2">
+            ${[[`weekly`,`Weekly`],[`all-time`,`All-time`]].map(([e,t])=>i`
+                <button
+                  key=${e}
+                  type="button"
+                  onClick=${()=>u(e)}
+                  className=${l===e?`min-h-12 rounded-2xl border border-accent/30 bg-accent/12 px-4 text-sm font-semibold text-white`:`min-h-12 rounded-2xl border border-white/8 bg-white/[0.03] px-4 text-sm font-semibold text-white/65`}
+                >
+                  ${t}
+                </button>
+              `)}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            ${[[`hours`,`Hours`],[`streak`,`Streak`],[`total`,`Total hours`]].map(([e,t])=>i`
+                <button
+                  key=${e}
+                  type="button"
+                  onClick=${()=>f(e)}
+                  className=${d===e?`min-h-12 rounded-2xl border border-accent2/30 bg-accent2/12 px-4 text-sm font-semibold text-white`:`min-h-12 rounded-2xl border border-white/8 bg-white/[0.03] px-4 text-sm font-semibold text-white/65`}
+                >
+                  ${t}
+                </button>
+              `)}
+          </div>
+        </div>
+      </section>
+
+      ${g.length?i`
+            <${a} leaders=${_} onProfileOpen=${c} />
+
+            <section className="glass-panel rounded-[2rem] overflow-hidden">
+              <div className="grid grid-cols-[72px_minmax(0,1fr)_120px_120px] gap-4 border-b border-white/8 px-5 py-4 text-xs uppercase tracking-[0.24em] text-white/45">
+                <div>Rank</div>
+                <div>Learner</div>
+                <div>Value</div>
+                <div>Streak</div>
+              </div>
+              <div className="grid">
+                ${g.map(e=>i`
+                    <button
+                      key=${e.id}
+                      type="button"
+                      onClick=${()=>c(e.id)}
+                      className="grid grid-cols-[72px_minmax(0,1fr)_120px_120px] gap-4 border-b border-white/6 px-5 py-4 text-left transition hover:bg-white/[0.03]"
+                    >
+                      <div className="font-display text-2xl font-bold text-white">#${e.rank}</div>
+                      <div>
+                        <div className="font-semibold text-white">${e.name}</div>
+                        <div className="mt-1 text-sm text-white/50">${e.metrics.level}</div>
+                      </div>
+                      <div className="font-semibold text-white">${e.displayValue}</div>
+                      <div className="text-white/60">${e.metrics.currentStreak}d</div>
+                    </button>
+                  `)}
+              </div>
+            </section>
+          `:i`
+            <${n}
+              title="No members match that search"
+              detail="Try a broader search term or switch the leaderboard scope."
+            />
+          `}
+    </div>
+  `}export{c as default};

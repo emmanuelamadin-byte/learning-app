@@ -1,0 +1,21 @@
+{
+  "name": "learn-tracker",
+  "version": "1.0.0",
+  "description": "Modular React PWA",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "npx serve .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "latest",
+    "htm": "^3.1.1",
+    "lucide-react": "latest",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  }
+}
